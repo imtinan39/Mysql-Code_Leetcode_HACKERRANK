@@ -1,0 +1,704 @@
+LEETCODE:
+
+1.
+
+SELECT name
+FROM customer WHERE IFNULL(referee_id, 0) <> 2
+
+Above is Slower
+
+OR
+
+SELECT name FROM Customer WHERE referee_id != 2 OR referee_id IS NULL;
+
+
+OR
+
+
+select name
+from Customer
+where referee_id <> 2 or coalesce(referee_id, 0) = 0;
+
+
+
+
+
+Above is The Fastest
+
+
+
+
+2.
+
+SELECT name , population, area FROM World WHERE area >= 3000000 OR population >= 25000000;
+
+
+Pandas Equivalent
+
+   df = world[(world['area'] >= 3000000) | (world['population'] >= 25000000)]
+
+3
+
+
+SELECT DISTINCT author_id AS id FROM Views WHERE author_id = viewer_id ORDER BY author_id ASC;
+
+
+Pandas
+
+import pandas as pd
+
+def article_views(views: pd.DataFrame) -> pd.DataFrame:
+  return views[(views.author_id == views.viewer_id)]\
+  .rename(columns={"author_id": "id"})[['id']]\
+  .drop_duplicates()\
+  .sort_values(by=['id'])
+
+
+
+
+4)
+
+
+SELECT tweet_id FROM Tweets WHERE LENGTH(content) >15;
+
+
+Pandas
+
+def invalid_tweets(tweets: pd.DataFrame) -> pd.DataFrame:
+    return tweets[
+        tweets['content'].str.len() > 15
+    ][['tweet_id']]
+
+
+5)
+
+SELECT EmployeeUNI.unique_id, Employees.name FROM Employees LEFT JOIN EmployeeUNI ON
+
+
+Employees.id=EmployeeUNI.id;
+
+After joining if any columns of rows doesn’t have data then it automatically sets NULL
+
+Pandas Solution
+
+
+
+import pandas as pd
+
+def replace_employee_id(employees: pd.DataFrame, employee_uni: pd.DataFrame) -> pd.DataFrame:
+    # Merge the DataFrames using the 'id' column and keep only necessary columns
+    merged_df = pd.merge(employees, employee_uni, how='left', on='id')
+    
+    # Select the columns 'unique_id' and 'name' from the merged DataFrame
+    result_df = merged_df[['unique_id', 'name']]
+    
+    return result_df
+
+6)
+
+
+
+# Write your MySQL query statement below
+
+
+SELECT Product.product_name, Sales.year, Sales.price FROM Sales LEFT JOIN Product ON
+
+
+Product.product_id=Sales.product_id;
+
+
+Pandas Solution
+
+import pandas as pd
+
+
+def sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
+
+
+   merged=pd.merge(sales,product,how="left",on="product_id")
+   merged=merged[["product_name","year","price"]]
+
+
+   return merged
+  
+
+
+
+
+
+
+
+
+
+7)
+
+
+
+
+SELECT Visits.customer_id, COUNT(Visits.customer_id) AS count_no_trans FROM Visits LEFT JOIN Transactions ON Visits.visit_id=Transactions.visit_id WHERE Transactions.transaction_id IS NULL GROUP BY Visits.customer_id;
+
+
+SAME RESULT SQL QUERY
+
+# Write your MySQL query statement below
+
+
+SELECT customer_id, COUNT(customer_id) AS count_no_trans  FROM ( SELECT Visits.customer_id, Transactions.transaction_id AS count_no_trans FROM Visits LEFT JOIN Transactions ON Visits.visit_id=Transactions.visit_id WHERE Transactions.transaction_id IS NULL) AS subquery GROUP BY customer_id;
+
+Same Solution in Pandas:
+
+import pandas as pd
+
+
+def find_customers(visits: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:
+
+
+  visits_no_trans = visits.merge(transactions, on='visit_id', how='left')
+
+
+  visits_no_trans = visits_no_trans[visits_no_trans.transaction_id.isna()]
+
+
+  df = visits_no_trans.groupby('customer_id', as_index=False)['visit_id'].count()
+
+
+  return df.rename(columns={'visit_id': 'count_no_trans'})
+
+
+
+
+8)
+
+# Write your MySQL query statement below
+SELECT weather.id AS Id
+FROM weather
+JOIN weather w ON DATEDIFF(weather.recordDate, w.recordDate) = 1 AND weather.Temperature > w.Temperature
+
+
+
+
+Pandas Equivalent Solution
+
+import pandas as pd
+
+
+def rising_temperature(weather: pd.DataFrame) -> pd.DataFrame:
+   # Ensure the 'recordDate' column is a datetime type
+   weather['recordDate'] = pd.to_datetime(weather['recordDate'])
+  
+   # Sorting the DataFrame by 'recordDate' to ensure the shift operation works correctly
+   weather.sort_values('recordDate', inplace=True)
+  
+   # Creating new columns for the previous day's temperature and record date
+   weather['PreviousTemperature'] = weather['temperature'].shift(1)
+   weather['PreviousRecordDate'] = weather['recordDate'].shift(1)
+  
+   # Filtering the DataFrame to find rows where the temperature is higher
+   # than the previous day and the date is exactly one day more than the previous record date
+   result = weather[
+       (weather['temperature'] > weather['PreviousTemperature']) &
+       (weather['recordDate'] == weather['PreviousRecordDate'] + pd.Timedelta(days=1))
+   ][['id']].rename(columns={'id': 'Id'})
+  
+   return result
+
+
+9)
+
+# Write your MySQL query statement below
+SELECT
+   start.machine_id,
+   ROUND(AVG(end.timestamp - start.timestamp), 3) AS processing_time
+FROM
+   Activity AS start
+JOIN
+   Activity AS end ON start.machine_id = end.machine_id
+                   AND start.process_id = end.process_id
+                   AND start.activity_type = 'start'
+                   AND end.activity_type = 'end'
+GROUP BY
+   start.machine_id;
+
+
+
+
+10)
+
+
+# Write your MySQL query statement below
+
+
+SELECT
+   Students.student_id,
+   Students.student_name,
+   Subjects.subject_name,
+   coalesce(S.attended_exams,0) AS attended_exams
+FROM
+   Students
+CROSS JOIN
+   Subjects
+LEFT JOIN
+   (SELECT
+        student_id,
+        subject_name,
+        COUNT(subject_name) AS attended_exams
+    FROM
+        Examinations
+    GROUP BY
+        student_id, subject_name
+   ) AS S
+ON
+   Students.student_id = S.student_id
+   AND Subjects.subject_name = S.subject_name ORDER BY Students.student_id,Subjects.subject_name;
+
+
+
+
+
+11)
+
+SELECT name FROM Employee WHERE id IN (SELECT managerID FROM (SELECT managerID,COUNT(managerId) AS C FROM Employee GROUP BY managerID HAVING C>=5) AS S )
+
+
+12)
+
+
+Solution
+
+SELECT Signups.user_id, ROUND( COALESCE(COALESCE(S2.CON,0)/COALESCE(S3.TOT,0),0),2) AS confirmation_rate
+
+
+FROM Signups LEFT JOIN
+
+
+(SELECT
+       user_id,
+       COUNT(action) AS CON
+   FROM
+       Confirmations
+   WHERE
+       action = "confirmed"
+   GROUP BY
+       user_id
+) AS S2
+
+
+ON S2.user_id=Signups.user_id
+LEFT JOIN
+
+
+(SELECT
+       user_id,
+       COUNT(action) AS TOT
+   FROM
+       Confirmations
+   GROUP BY
+       user_id
+) AS S3
+
+
+ON
+
+
+S3.user_id=Signups.user_id
+
+
+13)
+
+SELECT Prices.product_id, COALESCE(ROUND(SUM(units*price)/SUM(units),2),0) AS average_price FROM Prices LEFT JOIN UnitsSold ON UnitsSold.product_id=Prices.product_id AND UnitsSold.purchase_date BETWEEN Prices.start_date AND Prices.end_date GROUP BY Prices.product_id;
+
+
+14)
+SELECT project_id, ROUND(AVG(experience_years),2) AS average_years FROM Project LEFT JOIN Employee ON Project.employee_id=Employee.employee_id GROUP BY project_id;
+
+15)
+
+
+
+
+
+SELECT Register.contest_id, ROUND(COUNT( Register.user_id)/(SELECT COUNT(DISTINCT user_id) FROM Users)*100,2) AS percentage FROM Users LEFT JOIN Register ON Users.user_id=Register.user_id GROUP BY Register.contest_id HAVING Register.contest_id IS NOT NULL ORDER BY percentage DESC, Register.contest_id ASC;
+
+
+16)
+
+SELECT P.query_name, ROUND(AVG(P.R),2) AS quality, COALESCE(ROUND(L/COUNT(L)*100,2),0) AS poor_query_percentage FROM (SELECT K.query_name,rating/position AS R,S.C AS L FROM Queries AS K LEFT JOIN (SELECT query_name, COUNT(rating) AS C FROM Queries WHERE rating<3  GROUP BY query_name) AS S ON S.query_name=K.query_name) AS P WHERE P.query_name IS NOT NULL
+
+
+GROUP BY query_name;
+
+SAME RESULT QUERY
+
+
+SELECT
+   Q.query_name,
+   ROUND(AVG(Q.rating / Q.position), 2) AS quality,
+   COALESCE(ROUND(SUM(CASE WHEN Q.rating < 3 THEN 1 ELSE 0 END) / COUNT(Q.rating) * 100, 2), 0) AS poor_query_percentage
+FROM
+   Queries AS Q WHERE Q.query_name IS NOT NULL
+GROUP BY
+   Q.query_name;
+
+
+
+
+
+
+
+
+
+
+
+17)
+
+
+
+
+
+SELECT DATE_FORMAT(trans_date, '%Y-%m') AS month , country, COUNT(id) AS trans_count, SUM(CASE WHEN state="approved" THEN 1 ELSE 0 END) AS approved_count, SUM(amount) AS trans_total_amount, SUM(CASE WHEN state="approved" THEN amount ELSE 0 END) AS approved_total_amount
+FROM Transactions GROUP BY DATE_FORMAT(trans_date, '%Y-%m'),country;
+
+
+18)
+
+
+
+SELECT  ROUND(SUM( CASE WHEN order_type='immediate' THEN 1 ELSE 0 END)/COUNT(customer_id )*100,2) AS immediate_percentage
+FROM (
+   SELECT delivery_id,
+          customer_id,
+          order_date,
+          customer_pref_delivery_date AS pref,
+          CASE
+              WHEN order_date = customer_pref_delivery_date THEN 'immediate'
+              ELSE 'scheduled'
+          END AS order_type,
+          ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date, customer_pref_delivery_date) AS rn
+   FROM Delivery
+) AS S
+WHERE rn = 1;
+
+
+
+
+19)
+
+
+
+
+WITH FirstLoginDates AS (
+   SELECT
+       player_id,
+       MIN(event_date) AS first_login_date
+   FROM
+       Activity
+   GROUP BY
+       player_id
+)
+
+
+SELECT
+   ROUND(
+       COUNT(DISTINCT f.player_id) /
+       (SELECT COUNT(DISTINCT player_id) FROM Activity),
+       2
+   ) AS fraction
+FROM
+   FirstLoginDates f
+JOIN
+   Activity a ON f.player_id = a.player_id AND a.event_date = DATE_ADD(f.first_login_date, INTERVAL 1 DAY);
+
+
+
+
+20)
+
+SELECT activity_date AS day, COUNT(DISTINCT user_id) AS active_users FROM Activity WHERE activity_date >"2019-06-27" AND activity_date<= "2019-07-27"  GROUP BY activity_date;
+
+
+Same type sOLUTION
+
+
+
+SELECT activity_date AS day, COUNT(DISTINCT user_id) AS active_users FROM Activity WHERE activity_date BETWEEN date_sub('2019-07-27', INTERVAL 29 DAY)
+AND "2019-07-27" GROUP BY activity_date;
+ 21)
+WITH F AS
+(
+   SELECT product_id, MIN(year) as year, quantity, price FROM Sales GROUP BY product_id
+)
+
+
+SELECT S.product_id, F.year AS first_year, S.quantity, S.price
+FROM Sales S
+LEFT JOIN F ON F.product_id = S.product_id AND F.year = S.year
+WHERE F.year IS NOT NULL;
+
+
+
+22)
+
+SELECT class FROM Courses GROUP BY class HAVING COUNT(student)>=5;
+
+
+23)
+
+SELECT user_id, COUNT(follower_id) AS followers_count FROM Followers GROUP BY user_id ORDER BY user_id;
+
+
+24)
+
+The COALESCE function is typically used when you want to provide a fallback value in case a column is NULL. However, in this context, it seems you want to handle the case where there are no rows meeting the condition and return NULL in that specific situation.
+The COALESCE in your query doesn't change the result because you're providing NULL as the fallback value, which is essentially saying "if num is NULL, then return NULL, otherwise, return num."
+To explicitly return NULL when there are no rows meeting the condition, you can use a subquery and adjust the logic:
+
+
+SELECT COALESCE((SELECT MAX(num)
+                FROM MyNumbers
+                GROUP BY num
+                HAVING COUNT(num) = 1
+                ORDER BY num DESC
+                LIMIT 1), NULL) AS num;
+
+
+
+
+24)
+
+WITH F AS
+(SELECT customer_id ,product_key FROM Customer WHERE product_key IN(SELECT product_key FROM  Product)
+
+
+)
+
+
+SELECT F.customer_id  FROM F GROUP BY F.customer_id HAVING COUNT( DISTINCT F.product_key) = (SELECT COUNT(product_key) FROM  Product)
+
+
+
+Easier Solution
+
+SELECT customer_id
+FROM Customer
+GROUP BY customer_id
+HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(product_key) FROM Product);
+
+
+25)
+
+WITH F AS
+(
+
+
+SELECT employee_id, name FROM Employees WHERE employee_id IN (SELECT DISTINCT reports_to FROM Employees WHERE reports_to IS NOT NULL)
+),
+
+
+S AS
+
+
+( SELECT reports_to, COUNT(*) AS reports_count , AVG(age) AS average_age FROM Employees WHERE reports_to IS NOT NULL GROUP BY reports_to)
+
+
+SELECT F.employee_id AS  employee_id , F.name AS name , S.reports_count AS reports_count , ROUND(S.average_age)  AS average_age FROM F LEFT JOIN S ON
+
+
+S.reports_to=F.employee_id  ORDER BY F.employee_id
+
+
+Easier Solution:
+
+# Write your MySQL query statement below
+SELECT
+   emp1.employee_id,
+   emp1.name,
+   COUNT(emp2.employee_id) AS reports_count,
+   ROUND(AVG(emp2.age)) AS average_age
+FROM Employees emp1
+INNER JOIN Employees emp2 ON emp1.employee_id = emp2.reports_to
+GROUP BY emp1.employee_id
+ORDER BY emp1.employee_id
+
+26)
+
+SELECT
+ employee_id,
+ department_id
+FROM
+ Employee
+WHERE
+ primary_flag = 'Y'
+UNION
+SELECT
+ employee_id,
+ department_id
+FROM
+ Employee
+GROUP BY
+ employee_id
+HAVING
+ COUNT(employee_id) = 1;
+
+27)
+
+SELECT  x,y,z ,(CASE
+   WHEN x + y <= z OR x + z <= y OR y + z <= x THEN "No" ELSE "Yes" END)AS triangle FROM Triangle;
+
+
+
+
+28)
+
+SELECT DISTINCT
+   l1.Num AS ConsecutiveNums
+FROM
+   Logs l1,
+   Logs l2,
+   Logs l3
+WHERE
+   l1.Id = l2.Id - 1
+   AND l2.Id = l3.Id - 1
+   AND l1.Num = l2.Num
+   AND l2.Num = l3.Num
+;
+
+29)
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+ product_id,
+ 10 AS price
+FROM
+ Products
+GROUP BY
+ product_id
+HAVING
+ MIN(change_date) > '2019-08-16'
+UNION ALL
+SELECT
+ product_id,
+ new_price AS price
+FROM
+ Products
+WHERE
+ (product_id, change_date) IN (
+   SELECT
+     product_id,
+     MAX(change_date)
+   FROM
+     Products
+   WHERE
+     change_date <= '2019-08-16'
+   GROUP BY
+     product_id
+ )
+
+30)
+
+
+
+# Write your MySQL query statement below
+
+
+WITH D AS
+(
+SELECT
+   turn, person_name,
+   SUM(weight) OVER (ORDER BY turn) AS cumulative_sum
+FROM
+   Queue
+
+
+)
+
+
+
+
+SELECT person_name FROM D WHERE D.cumulative_sum<=1000 ORDER BY D.cumulative_sum DESC LIMIT 1;
+
+
+
+
+31)
+
+WITH F AS
+
+
+(
+SELECT account_id,income, (CASE
+
+
+WHEN income <20000 THEN "Low Salary"
+WHEN income BETWEEN 20000 AND 50000 THEN "Average Salary"
+WHEN income >50000 THEN "High Salary"
+ END ) AS cat FROM Accounts
+
+
+)
+
+
+SELECT "Low Salary" AS category , COUNT(cat) AS accounts_count  FROM F WHERE cat="Low Salary"
+UNION
+SELECT "Average Salary" AS category, COUNT(cat) AS accounts_count  FROM F WHERE cat="Average Salary"
+UNION
+SELECT "High Salary" AS category, COUNT(cat) AS accounts_count  FROM F WHERE cat="High Salary"
+
+32)
+
+# Write your MySQL query statement below
+
+
+SELECT employee_id FROM Employees WHERE salary<30000 AND manager_id NOT IN(SELECT employee_id FROM Employees) ORDER BY employee_id ASC
+
+33)
+
+
+SELECT
+   CASE
+       WHEN id = (SELECT MAX(id) FROM seat) AND id % 2 = 1
+           THEN id
+       WHEN id % 2 = 1
+           THEN id + 1
+       ELSE id - 1
+   END AS id,
+   student
+FROM seat
+ORDER BY id
+
+34)
+
+# Write your MySQL query statement below
+
+
+
+
+
+
+(SELECT Users.name AS results FROM MovieRating LEFT JOIN Users ON MovieRating.user_id=Users.user_id
+
+
+
+
+GROUP BY MovieRating.user_id ORDER BY COUNT(*) DESC,Users.name LIMIT 1  )
+
+
+UNION ALL
+
+
+(SELECT Movies.title AS results FROM MovieRating LEFT JOIN Movies ON MovieRating.movie_id =Movies.movie_id WHERE created_at BETWEEN "2020-02-01" AND "2020-02-29"
+
+
+GROUP BY Movies.title ORDER BY AVG(rating) DESC, Movies.title ASC LIMIT 1)
+Correct Use of Parentheses: When using ORDER BY and LIMIT within subqueries that are part of a UNION or UNION ALL, you need to enclose each subquery in parentheses. However, MySQL allows the use of ORDER BY and LIMIT without parentheses in the final part of a UNION/UNION ALL query. Your query does not show syntax errors in this aspect because MySQL's flexibility with UNION operations, but it's something to keep in mind for more strict SQL environments or complex queries.
+
