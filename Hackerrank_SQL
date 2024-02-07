@@ -1,0 +1,312 @@
+1.
+
+SELECT DISTINCT CITY FROM STATION WHERE CITY LIKE 'A%' OR CITY LIKE 'E%' OR CITY LIKE 'I%' OR CITY LIKE 'O%' OR CITY LIKE 'U%';
+
+Can be written as below
+
+SELECT DISTINCT CITY FROM STATION WHERE LEFT(CITY, 1) IN ('A', 'E', 'I', 'O', 'U');
+
+But,
+
+
+The query you've provided is another valid approach to selecting distinct city names from the STATION table that start with a vowel (A, E, I, O, U). However, the syntax you've used with the square brackets [AEIOU] is specific to certain SQL dialects like SQL Server's T-SQL. It's important to note that not all SQL database systems support this syntax.
+In SQL Server, your query:
+sql
+Copy code
+SELECT DISTINCT CITY FROM STATION WHERE CITY LIKE '[AEIOU]%';
+
+will indeed select distinct cities whose names start with any of the vowels A, E, I, O, or U. This is a more concise way compared to using multiple OR conditions or the LEFT function with an IN clause, as previously discussed. It's efficient and readable, but always ensure that the database system you're working with supports this pattern matching syntax.
+
+
+
+2.
+
+
+DIVISION BY TWO CAN BE CHECKED BY BELOW:
+
+INTEGER_COUMN%2=0
+
+3.
+
+SELECT COUNT(CITY)- COUNT(DISTINCT CITY) FROM STATION
+
+
+4.
+
+LENGTH() can be used to check the length of a text in SQL
+
+
+
+5)
+
+SELECT DISTINCT CITY FROM STATION WHERE LOWER(RIGHT(CITY, 1)) IN ('a', 'e', 'i','o','u');
+
+
+6)
+
+SELECT City FROM Station WHERE City REGEXP '^[aeiou]' and City REGEXP '[aeiou]$';
+
+
+Following does the same
+
+SELECT DISTINCT CITY  FROM STATION  WHERE LOWER(SUBSTRING(CITY, 1, 1)) IN ('a', 'e', 'i', 'o', 'u')  AND LOWER(SUBSTRING(CITY, LENGTH(CITY), 1)) IN ('a', 'e', 'i', 'o', 'u');
+
+
+7)
+
+select distinct CITY from STATION where CITY RLIKE '^[^AEIOU]'
+
+Following does the same
+
+SELECT DISTINCT CITY FROM STATION WHERE LOWER(LEFT(CITY,1)) NOT IN ('A','E','I','O','U');
+
+8)
+
+SELECT Name FROM STUDENTS WHERE Marks >75 ORDER BY RIGHT(Name,3) ASC, ID ASC;
+
+
+9)
+
+
+SELECT ROUND(SUM(LAT_N),2),ROUND(SUM(LONG_W),2) FROM STATION;
+
+
+10)
+
+Your SQL query is almost correct, but it contains a syntax error in the subquery. To fix this, you need to properly nest the subquery within parentheses. Here's the corrected version of your query:
+sql
+Copy code
+SELECT ROUND(LONG_W, 4) 
+FROM STATION 
+WHERE LAT_N = (SELECT MAX(LAT_N) FROM STATION WHERE LAT_N < 137.2345);
+
+
+
+
+
+
+
+
+11)
+
+SELECT CASE
+    WHEN A + B <= C OR A + C <= B OR B + C <= A THEN 'Not A Triangle'
+    WHEN A = B AND B = C THEN 'Equilateral'
+    WHEN A = B OR A = C OR B = C THEN 'Isosceles'
+    ELSE 'Scalene'
+END AS Triangle_Type
+FROM TRIANGLES;
+
+
+12)
+
+/*
+Enter your query here.
+*/
+
+SELECT CONCAT(Name,'(',LEFT(Occupation,1),')') FROM OCCUPATIONS ORDER BY Name ASC;
+
+SELECT CONCAT('There are a total of ', COUNT(Occupation),' ',LOWER(Occupation),'s.') FROM OCCUPATIONS GROUP BY OCCUPATION ORDER BY COUNT(Occupation) ASC, LOWER(Occupation) ASC;
+13’
+
+SELECT 
+    MAX(CASE WHEN Occupation = 'Doctor' THEN Name END) AS Doctor,
+    MAX(CASE WHEN Occupation = 'Professor' THEN Name END) AS Professor,
+    MAX(CASE WHEN Occupation = 'Singer' THEN Name END) AS Singer,
+    MAX(CASE WHEN Occupation = 'Actor' THEN Name END) AS Actor
+FROM (
+    SELECT 
+        Occupation, 
+        Name,
+        ROW_NUMBER() OVER (PARTITION BY Occupation ORDER BY Name) AS RowNum
+    FROM 
+        OCCUPATIONS
+) AS SubQuery
+GROUP BY RowNum
+ORDER BY RowNum;
+
+
+14)
+
+SELECT ROUND(AVG(POPULATION)) FROM CITY;
+
+15)
+
+SELECT MAX(POPULATION)-MIN(POPULATION) FROM CITY;
+
+16)
+
+SELECT CEIL(AVG(salary) - AVG(CAST(REPLACE(CAST(salary AS CHAR), '0', '') AS UNSIGNED))) AS error_amount 
+FROM employees;
+
+
+
+17)
+
+SELECT 
+    (SELECT MAX(salary * months) FROM Employee) AS max_total_salary, 
+    COUNT(employee_id) 
+FROM 
+    Employee 
+WHERE 
+    salary * months = (SELECT MAX(salary * months) FROM Employee);
+
+Can be written as following also,
+
+SELECT 
+    salary * months AS total_salary, 
+    COUNT(employee_id)
+FROM 
+    Employee
+GROUP BY 
+    salary * months
+HAVING 
+    total_salary = (SELECT MAX(salary * months) FROM Employee);
+
+In Having it must be  total_salary else it won’t work.
+
+
+
+18)
+
+SELECT ROUND(ABS(MIN(LAT_N)-MAX(LAT_N))+ABS(MIN(LONG_W)-MAX(LONG_W)),4) FROM STATION;
+
+
+19)
+
+
+
+SELECT ROUND(
+    SQRT(POW(ABS(MIN(LAT_N) - MAX(LAT_N)), 2) + POW(ABS(MIN(LONG_W) - MAX(LONG_W)), 2)),
+    4
+) FROM STATION;
+
+
+20)
+
+
+SELECT SUM(CITY.POPULATION) FROM CITY  JOIN COUNTRY ON CITY.COUNTRYCODE = COUNTRY.CODE WHERE COUNTRY.CONTINENT='Asia' 
+
+
+IN JOINING WHERE SHOULD BE AT LAST
+
+
+21)
+
+SELECT CITY.NAME FROM CITY JOIN COUNTRY ON CITY.COUNTRYCODE = COUNTRY.CODE WHERE COUNTRY.CONTINENT='Africa'; 
+
+
+22)
+
+SELECT 
+    column_to_group_by, 
+    COUNT(*) AS count,
+    CASE 
+        WHEN COUNT(*) > condition1 THEN 'Result1'
+        WHEN COUNT(*) > condition2 THEN 'Result2'
+        ELSE 'OtherResult'
+    END AS case_result
+FROM 
+    your_table
+GROUP BY 
+    Column_to_group_by;
+
+
+23)
+
+SELECT 
+    N,
+    CASE
+        WHEN P IS NULL THEN 'Root'
+        WHEN N IN (SELECT DISTINCT P FROM BST WHERE P IS NOT NULL) THEN 'Inner'
+        ELSE 'Leaf'
+    END as NodeType
+FROM 
+    BST
+ORDER BY 
+    N;
+
+
+24)
+
+
+Functional Dependence: The rule of thumb is that every column in your SELECT statement that is not within an aggregate function (like COUNT()) should appear in your GROUP BY clause. The founder column is such a non-aggregated field, and it’s functionally dependent on company_code (assuming each company has only one founder). However, SQL queries don't automatically infer this functional dependency, so you need to explicitly include the founder in the GROUP BY clause.
+
+Also,
+The need to include the founder in the GROUP BY clause in your SQL query arises from a requirement of most SQL database systems known as "functional dependence." When you use aggregate functions like COUNT(), SUM(), AVG(), etc., in combination with non-aggregated columns in the SELECT clause, you must include all these non-aggregated columns in the GROUP BY clause. This requirement ensures that the query results are deterministic and meaningful.
+
+
+
+SELECT 
+    Company.company_code,
+    Company.founder,
+    COUNT(DISTINCT Lead_Manager.lead_manager_code),
+    COUNT(DISTINCT Senior_Manager.senior_manager_code),
+    COUNT(DISTINCT Manager.manager_code),
+    COUNT(DISTINCT Employee.employee_code)
+FROM 
+    ((((
+        Company 
+        LEFT JOIN Lead_Manager ON Company.company_code = Lead_Manager.company_code)
+        LEFT JOIN Senior_Manager ON Company.company_code = Senior_Manager.company_code)
+        LEFT JOIN Manager ON Company.company_code = Manager.company_code)
+        LEFT JOIN Employee ON Company.company_code = Employee.company_code)
+GROUP BY 
+    Company.company_code, Company.founder
+ORDER BY 
+    Company.company_code;
+
+
+25)
+
+SELECT ROUND(LAT_N,4) as median_lat
+FROM (
+    SELECT LAT_N, ROW_NUMBER() OVER (ORDER BY LAT_N) as row_num, COUNT(*) OVER () as total_count
+    FROM STATION
+) as subquery
+WHERE row_num IN (FLOOR((total_count + 1) / 2), CEIL((total_count + 1) / 2));
+
+
+
+26)
+SELECT h.hacker_id, h.name, COUNT(c.challenge_id) AS challenge_count
+FROM Hackers h
+JOIN Challenges c ON h.hacker_id = c.hacker_id
+GROUP BY h.hacker_id, h.name
+
+HAVING challenge_count = (
+    SELECT MAX(challenge_count) FROM (
+        SELECT COUNT(challenge_id) AS challenge_count
+        FROM Challenges
+        GROUP BY hacker_id
+    ) AS subquery
+)
+
+OR challenge_count NOT IN (
+    SELECT challenge_count FROM (
+        SELECT COUNT(challenge_id) AS challenge_count
+        FROM Challenges
+        GROUP BY hacker_id
+    ) AS subquery
+    GROUP BY challenge_count
+    HAVING COUNT(*) > 1 AND challenge_count < (
+        SELECT MAX(challenge_count) FROM (
+            SELECT COUNT(challenge_id) AS challenge_count
+            FROM Challenges
+            GROUP BY hacker_id
+        ) AS subquery
+    )
+)
+ORDER BY challenge_count DESC, h.hacker_id;
+
+
+
+27)
+
+Your SQL query is attempting to select ProductName from the Products table where the ProductID matches a ProductID from the OrderDetails table with a Quantity greater than 99. However, there's a syntax error in your query. When using a subquery to compare a value, you should enclose the subquery in parentheses. Also, ensure that the subquery returns a single value if you are using it with an equality operator (=). If the subquery might return multiple values, you should use the IN operator instead.
+
+
+
+
+
+
